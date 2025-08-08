@@ -11,24 +11,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🔽 Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: ⚙️ Set up PHP
+      - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring, xml, ctype, iconv, intl
+          extensions: mbstring, xml, ctype, iconv, intl, zip, curl, bcmath, json
           coverage: none
 
-      - name: 📦 Install dependencies
+      - name: Install dependencies
         run: composer install --no-interaction --prefer-dist
 
-      - name: 🔍 Run PHPStan
+      - name: Run PHPStan
         run: composer phpstan
 
-      - name: 🎯 Run CS Fixer (fail on issues)
+      - name: Run PHP-CS-Fixer (check only)
+        id: cs_check
+        continue-on-error: true
         run: composer cs
 
-      - name: ✅ Run PHPUnit tests
+      - name: Auto-fix and commit changes if needed
+        if: steps.cs_check.outcome == 'failure'
+        run: |
+          composer cs-fix
+
+          if ! git diff --quiet; then
+            git config --global user.name "GitHub Action"
+            git config --global user.email "actions@github.com"
+            git add .
+            git commit -m "🔧 cs-fixer: auto fix coding standards"
+            git push
+          fi
+
+      - name: Run PHPUnit
         run: vendor/bin/phpunit
