@@ -17,7 +17,7 @@ return $config
 		'strict_comparison' => true,
 		'declare_strict_types' => true,
 		'no_unused_imports' => true,
-		'php_unit_method_casing' => ['case' => 'snake'],
+		'php_unit_method_casing' => ['case' => 'camel_case'],
 		'phpdoc_order' => true,
 	])
 	->setFinder($finder);
