@@ -1,14 +1,23 @@
 <?php
 
 $finder = PhpCsFixer\Finder::create()
-    ->in(__DIR__ . '/src')
-    ->in(__DIR__ . '/tests');
+	->in(__DIR__ . '/src')
+	->in(__DIR__ . '/tests')
+	->name('*.php')
+	->notName('*.blade.php')
+	->ignoreDotFiles(true)
+	->ignoreVCS(true);
 
-return (new PhpCsFixer\Config())
-    ->setRiskyAllowed(true)
-    ->setRules([
-        '@PSR12' => true,
-        'strict_param' => true,
-        'declare_strict_types' => true,
-    ])
-    ->setFinder($finder);
+$config = new PhpCsFixer\Config();
+return $config
+	->setRiskyAllowed(true)
+	->setRules([
+		'@Symfony' => true,
+		'@Symfony:risky' => true,
+		'strict_comparison' => true,
+		'declare_strict_types' => true,
+		'no_unused_imports' => true,
+		'php_unit_method_casing' => ['case' => 'snake'],
+		'phpdoc_order' => true,
+	])
+	->setFinder($finder);

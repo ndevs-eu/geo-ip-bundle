@@ -37,8 +37,8 @@
     }
   },
   "scripts": {
-    "cs": "php-cs-fixer fix --dry-run --diff",
-    "cs-fix": "php-cs-fixer fix",
+    "cs": "php-cs-fixer fix --dry-run --diff --ansi",
+    "cs-fix": "php-cs-fixer fix --ansi",
     "phpstan": "phpstan analyse src --level 9 --memory-limit=512M"
   }
 }

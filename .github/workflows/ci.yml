@@ -11,23 +11,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: 🔽 Checkout repo
+        uses: actions/checkout@v4
 
-      - name: Set up PHP
+      - name: ⚙️ Set up PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
           extensions: mbstring, xml, ctype, iconv, intl
           coverage: none
 
-      - name: Install dependencies
-        run: composer install --no-interaction
+      - name: 📦 Install dependencies
+        run: composer install --no-interaction --prefer-dist
 
-      - name: Run PHPStan
+      - name: 🔍 Run PHPStan
         run: composer phpstan
 
-      - name: Run CS Fixer
+      - name: 🎯 Run CS Fixer (fail on issues)
         run: composer cs
 
-      - name: Run tests
+      - name: ✅ Run PHPUnit tests
         run: vendor/bin/phpunit
