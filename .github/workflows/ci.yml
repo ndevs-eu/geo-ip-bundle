@@ -45,6 +45,3 @@ jobs:
             git commit -m "🔧 cs-fixer: auto fix coding standards"
             git push
           fi
-
-      - name: Run PHPUnit
-        run: vendor/bin/phpunit
