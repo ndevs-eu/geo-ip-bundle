@@ -98,7 +98,16 @@ readonly class PullIp2LocationLiteDatabaseCommand
 
 		// Find .BIN file
 		$binFile = NULL;
-		foreach (scandir($targetDir) as $file) {
+
+
+		/** @var list<string>|false $zipDir */
+		$zipDir = scandir($targetDir);
+
+		if ($zipDir === false) {
+			throw new \RuntimeException('Failed to read target directory: ' . $targetDir);
+		}
+
+		foreach ($zipDir as $file) {
 			if (str_ends_with($file, '.BIN')) {
 				$binFile = $targetDir . '/' . $file;
 				break;
@@ -111,7 +120,6 @@ readonly class PullIp2LocationLiteDatabaseCommand
 
 		rename($binFile, $targetDir . '/DB.BIN');
 
-		// Cleanup other files (e.g., readme.txt, license.txt)
 
 		/** @var list<string>|false $dir */
 		$dir = scandir($targetDir);
