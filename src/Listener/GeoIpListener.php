@@ -10,7 +10,6 @@ use NDevsEu\GeoIp\Detector\IPDetector;
 use NDevsEu\GeoIp\Service\GeoIpService;
 use NDevsEu\GeoIp\ValueObject\IpAddress;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 
 readonly class GeoIpListener
@@ -23,46 +22,45 @@ readonly class GeoIpListener
 
     public function __invoke(RequestEvent $requestEvent): void
     {
-	    $request = $requestEvent->getRequest();
+        $request = $requestEvent->getRequest();
 
-	    /** @var string|null $realIp */
-	    $realIp = IPDetector::getRealClientIp($request);
+        /** @var string|null $realIp */
+        $realIp = IPDetector::getRealClientIp($request);
 
-	    /** @var string|null $ip */
-	    $ip = $this->parameterBag->get('geo_ip.mock_ip');
+        /** @var string|null $ip */
+        $ip = $this->parameterBag->get('geo_ip.mock_ip');
 
-	    if (NULL === $ip && NULL !== $realIp) {
-		    $ip = $realIp;
-	    }
+        if (null === $ip && null !== $realIp) {
+            $ip = $realIp;
+        }
 
-	    if (NULL === $ip) {
-		    $request->attributes->set('geoIp', NULL);
+        if (null === $ip) {
+            $request->attributes->set('geoIp', null);
 
-		    return;
-	    }
+            return;
+        }
 
-	    $ipAddress = new IpAddress($ip);
+        $ipAddress = new IpAddress($ip);
 
-	    try {
-		    $geoResponse = $this->geoService->lookup($ipAddress);
+        try {
+            $geoResponse = $this->geoService->lookup($ipAddress);
 
-		    if (NULL === $geoResponse) {
-			    $request->attributes->set('geoIp', NULL);
+            if (null === $geoResponse) {
+                $request->attributes->set('geoIp', null);
 
-			    return;
-		    }
+                return;
+            }
 
-		    $request->attributes->set('geoIp', [
-			    'country' => $geoResponse->getCountry() ?? NULL,
-			    'region' => $geoResponse->getRegion() ?? NULL,
-			    'city' => $geoResponse->getCity() ?? NULL,
-			    'postal' => $geoResponse->getPostal() ?? NULL,
-			    'latitude' => $geoResponse->getLatitude() ?? NULL,
-			    'longitude' => $geoResponse->getLongitude() ?? NULL,
-		    ]);
-	    } catch (AddressNotFoundException|InvalidDatabaseException|\Exception $e) {
-		    $request->attributes->set('geoIp', NULL);
-	    }
+            $request->attributes->set('geoIp', [
+                'country' => $geoResponse->getCountry() ?? null,
+                'region' => $geoResponse->getRegion() ?? null,
+                'city' => $geoResponse->getCity() ?? null,
+                'postal' => $geoResponse->getPostal() ?? null,
+                'latitude' => $geoResponse->getLatitude() ?? null,
+                'longitude' => $geoResponse->getLongitude() ?? null,
+            ]);
+        } catch (AddressNotFoundException|InvalidDatabaseException|\Exception $e) {
+            $request->attributes->set('geoIp', null);
+        }
     }
-
 }
