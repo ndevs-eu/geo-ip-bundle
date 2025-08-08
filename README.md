@@ -7,17 +7,20 @@ Supports **MaxMind GeoLite2** and **IP2Location**, with optional fallback, mock 
 
 ## ⚙️ Installation
 
-```bash
-composer require ndevs-eu/geo-ip
-php bin/console geoip:install-config
-```
+- ``` composer require ndevs-eu/geo-ip-bundle ```
 
-> This command creates the config file `config/packages/geo_ip.yaml`  
-> and appends required variables into `.env` or `.env.local`.
+- ``` Copy example config to /config/packages/geo_ip.yaml ```
+
+- ``` Add env variables to your .env file (GEOIP_MAXMIND_LICENSE_KEY, GEOIP_IP2LOCATION_LICENSE_KEY) ```
+
+- ``` Run bin/console geoip:pull-maxmind-database ```
+
+- ``` Run bin/console geoip:pull-ip2loc-lite-database ```
+
 
 ---
 
-## 📁 Configuration structure (`geo_ip.yaml`)
+## 📁 Configuration structure (`config/packages/geo_ip.yaml`)
 
 ```yaml
 geo_ip:
@@ -104,7 +107,6 @@ when@dev:
 
 | Command                                | Description                                  |
 |----------------------------------------|----------------------------------------------|
-| `geoip:install-config`                 | Installs the default config and env vars     |
 | `geoip:pull-maxmind-database`          | Downloads the latest MaxMind GeoIP DB        |
 | `geoip:pull-ip2loc-lite-database`      | Downloads the latest IP2Location Lite DB     |
 
