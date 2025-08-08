@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace NDevsEu\GeoIp\Locator;
@@ -10,49 +11,45 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 readonly class Ip2LocationLocator implements LocatorInterface
 {
+    private Database $database;
 
-	private Database $database;
+    public function __construct(
+        ParameterBagInterface $parameterBag,
+    ) {
+        /** @var string|null $ip2LocationPath */
+        $ip2LocationPath = $parameterBag->get('geo_ip.ip2location.path');
 
+        if (!$ip2LocationPath) {
+            throw new \InvalidArgumentException('IP2Location path is not configured.');
+        }
 
-	public function __construct(
-		ParameterBagInterface $parameterBag,
-	)
-	{
-		/** @var string|null $ip2LocationPath */
-		$ip2LocationPath = $parameterBag->get('geo_ip.ip2location.path');
+        if (!is_file($ip2LocationPath.'DB.BIN')) {
+            throw new \RuntimeException("IP2Location .BIN file not found: $ip2LocationPath");
+        }
 
-		if (!$ip2LocationPath) {
-			throw new \InvalidArgumentException('IP2Location path is not configured.');
-		}
+        $this->database = new Database($ip2LocationPath.'DB.BIN', Database::FILE_IO);
+    }
 
-		if (!is_file($ip2LocationPath . 'DB.BIN')) {
-			throw new \RuntimeException("IP2Location .BIN file not found: $ip2LocationPath");
-		}
+    public function lookup(IpAddress $address): ?GeoResponse
+    {
+        try {
+            /** @var array<string, string|null>|false $record */
+            $record = $this->database->lookup($address->getAddress(), Database::ALL);
 
-		$this->database = new Database($ip2LocationPath . 'DB.BIN', Database::FILE_IO);
-	}
+            if (false === $record || empty($record)) {
+                return null;
+            }
 
-	public function lookup(IpAddress $address): ?GeoResponse
-	{
-		try {
-			/** @var array<string, string|null>|false $record */
-			$record = $this->database->lookup($address->getAddress(), Database::ALL);
-
-			if ($record === false || empty($record)) {
-				return null;
-			}
-
-			return new GeoResponse(
-				country: $record['countryCode'] ?? null,
-				region: null,
-				city: null,
-				postal: null,
-				latitude: isset($record['latitude']) ? (float)$record['latitude'] : null,
-				longitude: isset($record['longitude']) ? (float)$record['longitude'] : null
-			);
-		} catch (\Throwable $e) {
-			return null;
-		}
-	}
-
+            return new GeoResponse(
+                country: $record['countryCode'] ?? null,
+                region: null,
+                city: null,
+                postal: null,
+                latitude: isset($record['latitude']) ? (float) $record['latitude'] : null,
+                longitude: isset($record['longitude']) ? (float) $record['longitude'] : null
+            );
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
 }
