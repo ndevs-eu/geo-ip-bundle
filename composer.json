@@ -1,0 +1,44 @@
+{
+  "name": "ndevs-eu/geo-ip-bundle",
+  "type": "symfony-bundle",
+  "description": "Symfony bundle for Geo IP functionality",
+  "keywords": ["symfony", "bundle", "geo", "ip", "location", "geolocation"],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Josef Banya",
+      "email": "josef@banya.cz"
+    }
+  ],
+  "require": {
+    "php": "^8.2 || ^8.3",
+    "symfony/framework-bundle": "^6.4 || ^7.0",
+    "geoip2/geoip2": "^3.2",
+    "ip2location/ip2location-php": "^9.7"
+  },
+  "require-dev": {
+    "phpstan/phpstan": "^1.11",
+    "friendsofphp/php-cs-fixer": "^3.0",
+    "phpunit/phpunit": "^10.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "NDevsEu\\GeoIp\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "NDevsEu\\GeoIp\\Tests\\": "tests/"
+    }
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-main": "1.0-dev"
+    }
+  },
+  "scripts": {
+    "cs": "php-cs-fixer fix --dry-run --diff",
+    "cs-fix": "php-cs-fixer fix",
+    "phpstan": "phpstan analyse src"
+  }
+}
