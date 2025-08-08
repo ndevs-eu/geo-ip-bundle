@@ -14,11 +14,12 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
     name: 'geoip:pull-maxmind-database',
     description: 'Pulls the latest MaxMind GeoIP database.'
 )]
-readonly class PullMaxMindDatabaseCommand
+class PullMaxMindDatabaseCommand extends Command
 {
     public function __construct(
-        private ParameterBagInterface $parameterBag,
+        private readonly ParameterBagInterface $parameterBag,
     ) {
+	    parent::__construct();
     }
 
     public function __invoke(OutputInterface $output, InputInterface $input): int

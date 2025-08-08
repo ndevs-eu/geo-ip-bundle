@@ -14,11 +14,12 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
     name: 'geoip:pull-ip2loc-lite-database',
     description: 'Pulls the latest ip2loc lite database.'
 )]
-readonly class PullIp2LocationLiteDatabaseCommand
+ class PullIp2LocationLiteDatabaseCommand extends Command
 {
     public function __construct(
-        private ParameterBagInterface $parameterBag,
+        private readonly ParameterBagInterface $parameterBag,
     ) {
+		parent::__construct();
     }
 
     public function __invoke(OutputInterface $output, InputInterface $input): int
