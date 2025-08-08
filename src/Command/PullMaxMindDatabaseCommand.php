@@ -26,7 +26,7 @@ readonly class PullMaxMindDatabaseCommand
 	) {
 	}
 
-	protected function execute(InputInterface $input, OutputInterface $output): int
+	public function __invoke(OutputInterface $output, InputInterface $input): int
 	{
 		$output->writeln('<info>Pulling the latest MaxMind GeoIP database...</info>');
 
