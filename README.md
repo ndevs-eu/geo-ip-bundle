@@ -150,5 +150,6 @@ Just don't define a fallback resolver in config.
 
 MIT
 
+## GitAds Sponsored
+[![Sponsored by GitAds](https://gitads.dev/v1/ad-serve?source=ndevs-eu/geo-ip-bundle@github)](https://gitads.dev/v1/ad-track?source=ndevs-eu/geo-ip-bundle@github)
 
-<!-- GitAds-Verify: OOHJYA56MRUFTKQPFYFVL2QJTA9WSOK1 -->
