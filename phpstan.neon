@@ -5,6 +5,3 @@ parameters:
   level: max
   paths:
     - src
-  checkMissingIterableValueType: true
-  checkMissingCallableSignature: true
-  checkGenericClassInNonGenericObjectType: true
