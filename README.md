@@ -149,3 +149,6 @@ Just don't define a fallback resolver in config.
 ## 📄 License
 
 MIT
+
+
+<!-- GitAds-Verify: OOHJYA56MRUFTKQPFYFVL2QJTA9WSOK1 -->
