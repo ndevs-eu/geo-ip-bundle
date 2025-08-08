@@ -4,4 +4,4 @@ services:
     autoconfigure: true
 
   NDevsEu\GeoIp\:
-    resource: '%kernel.project_dir%/bundles/GeoIp/src/'
+    resource: '%kernel.project_dir%/vendor/ndevs-eu/geo-ip-bundle/src/'
