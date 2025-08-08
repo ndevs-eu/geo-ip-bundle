@@ -22,7 +22,7 @@ class PullMaxMindDatabaseCommand extends Command
         parent::__construct();
     }
 
-	public function execute(InputInterface $input, OutputInterface $output): int
+    public function execute(InputInterface $input, OutputInterface $output): int
     {
         $output->writeln('<info>Pulling the latest MaxMind GeoIP database...</info>');
 
