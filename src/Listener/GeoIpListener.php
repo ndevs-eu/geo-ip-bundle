@@ -26,18 +26,30 @@ readonly class GeoIpListener
 
 		$request = $requestEvent->getRequest();
 
+		/** @var string|null $realIp */
 		$realIp = $this->getRealClientIp($request);
 
+		/** @var string|null $ip */
 		$ip = $this->parameterBag->get('geo_ip.mock_ip');
 
-		if ($ip === null) {
+		if ($ip === null && $realIp !== null) {
 			$ip = $realIp;
+		}
+
+		if ($ip === null) {
+			$request->attributes->set('geoIp', null);
+			return;
 		}
 
 		$ipAddress = new IpAddress($ip);
 
 		try {
 			$geoResponse = $this->geoService->lookup($ipAddress);
+
+			if ($geoResponse === null) {
+				$request->attributes->set('geoIp', null);
+				return;
+			}
 
 			$request->attributes->set('geoIp', [
 				'country' => $geoResponse->getCountry() ?? null,
@@ -49,14 +61,7 @@ readonly class GeoIpListener
 			]);
 
 		} catch (AddressNotFoundException|InvalidDatabaseException|Exception $e) {
-			$request->attributes->set('geoIp', [
-				'country' => null,
-				'region'  => null,
-				'city'    => null,
-				'postal'  => null,
-				'latitude' => null,
-				'longitude' => null,
-			]);
+			$request->attributes->set('geoIp', null);
 		}
 	}
 

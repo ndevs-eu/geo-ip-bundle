@@ -26,24 +26,37 @@ readonly class PullIp2LocationLiteDatabaseCommand
 	{
 		$output->writeln('<info>Pulling the latest IP2Location Lite database...</info>');
 
-
+		/** @var string|null $ip2locationPath */
 		$ip2locationPath = $this->parameterBag->get('geo_ip.ip2location.path');
+
+		/** @var string|null $ip2locationKey */
 		$ip2locationKey = $this->parameterBag->get('geo_ip.ip2location.key');
 
-		$output->writeln(sprintf('<comment>Using database path: %s</comment>', $ip2locationPath));
+		if ($ip2locationPath === NULL && $ip2locationKey === NULL) {
+			$output->writeln('<error>IP2Location path or key is not configured. Please set "geo_ip.ip2location.path" and "geo_ip.ip2location.key" in your parameters.</error>');
+			return Command::FAILURE;
+		} else {
+			$output->writeln(sprintf('<comment>Using database path: %s</comment>', $ip2locationPath));
 
-		self::install(
-			licenseKey: $ip2locationKey,
-			targetDir: $ip2locationPath
-		);
+			self::install(
+				licenseKey: $ip2locationKey,
+				targetDir: $ip2locationPath
+			);
 
-		$output->writeln('<info>IP2Location Lite database has been successfully updated.</info>');
+			$output->writeln('<info>IP2Location Lite database has been successfully updated.</info>');
 
-		return Command::SUCCESS;
+			return Command::SUCCESS;
+		}
+
+
 	}
 
-	public static function install(string $licenseKey, string $targetDir = 'var/geoip'): void
+	public static function install(?string $licenseKey, ?string $targetDir = 'var/geoip'): void
 	{
+		if ($licenseKey === NULL || $targetDir === NULL) {
+			throw new \InvalidArgumentException('License key and target directory must be provided.');
+		}
+
 		$url = "https://download.ip2location.com/lite/IP2LOCATION-LITE-DB1.BIN.ZIP?license_key={$licenseKey}&suffix=ZIP";
 
 		$zipPath = $targetDir . '/ip2location.zip';
@@ -53,15 +66,26 @@ readonly class PullIp2LocationLiteDatabaseCommand
 		}
 
 		// Download ZIP
+		/** @var \CurlHandle|false $ch */
 		$ch = curl_init($url);
+
+		if (!$ch instanceof \CurlHandle) {
+			throw new \RuntimeException('Unable to initialize cURL');
+		}
+
+		/** @var resource|false $fp */
 		$fp = fopen($zipPath, 'w+');
+
+		if (!$fp) {
+			throw new \RuntimeException('Unable to open file for writing: ' . $zipPath);
+		}
+
 		curl_setopt($ch, CURLOPT_FILE, $fp);
-		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, TRUE);
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 		curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0');
 		curl_exec($ch);
 		curl_close($ch);
 		fclose($fp);
-
 		// Extract ZIP
 		$zip = new \ZipArchive();
 		if ($zip->open($zipPath) !== TRUE) {
@@ -88,7 +112,15 @@ readonly class PullIp2LocationLiteDatabaseCommand
 		rename($binFile, $targetDir . '/DB.BIN');
 
 		// Cleanup other files (e.g., readme.txt, license.txt)
-		foreach (scandir($targetDir) as $item) {
+
+		/** @var list<string>|false $dir */
+		$dir = scandir($targetDir);
+
+		if ($dir === false) {
+			throw new \RuntimeException('Failed to read target directory: ' . $targetDir);
+		}
+
+		foreach ($dir as $item) {
 			if (!in_array($item, ['.', '..', 'DB.BIN'], TRUE)) {
 				$path = $targetDir . '/' . $item;
 				is_file($path) ? unlink($path) : self::recursiveRemoveFolder($path);

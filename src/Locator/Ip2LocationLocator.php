@@ -18,7 +18,12 @@ readonly class Ip2LocationLocator implements LocatorInterface
 		ParameterBagInterface $parameterBag,
 	)
 	{
+		/** @var string|null $ip2LocationPath */
 		$ip2LocationPath = $parameterBag->get('geo_ip.ip2location.path');
+
+		if (!$ip2LocationPath) {
+			throw new \InvalidArgumentException('IP2Location path is not configured.');
+		}
 
 		if (!is_file($ip2LocationPath . 'DB.BIN')) {
 			throw new \RuntimeException("IP2Location .BIN file not found: $ip2LocationPath");
@@ -30,18 +35,22 @@ readonly class Ip2LocationLocator implements LocatorInterface
 	public function lookup(IpAddress $address): ?GeoResponse
 	{
 		try {
+			/** @var array<string, string|null>|false $record */
 			$record = $this->database->lookup($address->getAddress(), Database::ALL);
+
+			if ($record === false || empty($record)) {
+				return null;
+			}
 
 			return new GeoResponse(
 				country: $record['countryCode'] ?? null,
-				region: null, // free DB doesn't contain region
-				city: null,   // free DB doesn't contain city
+				region: null,
+				city: null,
 				postal: null,
 				latitude: isset($record['latitude']) ? (float)$record['latitude'] : null,
 				longitude: isset($record['longitude']) ? (float)$record['longitude'] : null
 			);
 		} catch (\Throwable $e) {
-			// nepodařilo se najít, vrať null
 			return null;
 		}
 	}

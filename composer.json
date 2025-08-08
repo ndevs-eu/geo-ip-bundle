@@ -39,6 +39,6 @@
   "scripts": {
     "cs": "php-cs-fixer fix --dry-run --diff",
     "cs-fix": "php-cs-fixer fix",
-    "phpstan": "phpstan analyse src"
+    "phpstan": "phpstan analyse src --level 9 --memory-limit=512M"
   }
 }

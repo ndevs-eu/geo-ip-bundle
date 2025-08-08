@@ -44,6 +44,11 @@ class GeoIpExtension extends Extension
 			'ip2location' => new Reference(Ip2LocationLocator::class),
 		];
 
+		$aliases = [
+			'maxmind' => MaxMindLocator::class,
+			'ip2location' => Ip2LocationLocator::class,
+		];
+
 		$primaryId = $config['resolver']['primary'];
 		$fallbackId = $config['resolver']['fallback'] ?? null;
 
@@ -58,7 +63,7 @@ class GeoIpExtension extends Extension
 
 			$container->setAlias(LocatorInterface::class, FallbackLocator::class);
 		} else {
-			$container->setAlias(LocatorInterface::class, $primary);
+			$container->setAlias(LocatorInterface::class, $aliases[$primaryId]);
 		}
 
 		if ($config['listener_enabled']) {

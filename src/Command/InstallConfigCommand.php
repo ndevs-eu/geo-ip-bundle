@@ -54,9 +54,16 @@ ENV;
 		}
 
 		$envPath = file_exists('.env.local') ? '.env.local' : '.env';
+
+		/** @var string|false $envContent */
 		$envContent = file_get_contents($envPath);
 
-		if (strpos($envContent, 'GEOIP_MAXMIND_LICENSE_KEY') === false) {
+		if ($envContent === false) {
+			$io->error("Failed to read the environment file: $envPath");
+			return Command::FAILURE;
+		}
+
+		if (!str_contains($envContent, 'GEOIP_MAXMIND_LICENSE_KEY')) {
 			file_put_contents($envPath, PHP_EOL . self::ENV_LINES . PHP_EOL, FILE_APPEND);
 			$io->success("Environment variables added to $envPath");
 		} else {

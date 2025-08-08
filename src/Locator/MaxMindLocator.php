@@ -19,14 +19,17 @@ class MaxMindLocator implements LocatorInterface
 		ParameterBagInterface $parameterBag,
 	)
 	{
+		/** @var string|null $maxMindDbPath */
 		$maxMindDbPath = $parameterBag->get('geo_ip.maxmind.path');
+
+		if (!$maxMindDbPath) {
+			throw new \InvalidArgumentException('MaxMind database path is not configured.');
+		}
 
 		try {
 			$this->maxMindDbReader = new Reader(filename: $maxMindDbPath . '/GeoIp.mmdb');
 		} catch (InvalidDatabaseException $e) {
 			throw new \RuntimeException('Invalid MaxMind database file: ' . $maxMindDbPath, 0, $e);
-		} catch (\Exception $e) {
-			throw new \RuntimeException('Failed to initialize MaxMind reader: ' . $e->getMessage(), 0, $e);
 		}
 
 	}

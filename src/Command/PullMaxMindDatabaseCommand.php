@@ -3,6 +3,12 @@ declare(strict_types=1);
 
 namespace NDevsEu\GeoIp\Command;
 
+use CurlHandle;
+use PharData;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use RuntimeException;
+use SplFileInfo;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -13,22 +19,24 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 	name: 'geoip:pull-maxmind-database',
 	description: 'Pulls the latest MaxMind GeoIP database.'
 )]
-readonly class PullMaxMindDatabaseCommand
+class PullMaxMindDatabaseCommand extends Command
 {
-
 	public function __construct(
-		private ParameterBagInterface $parameterBag
-	)
-	{
+		private readonly ParameterBagInterface $parameterBag
+	) {
+		parent::__construct();
 	}
 
-	public function __invoke(OutputInterface $output, InputInterface $input): int
+	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
 		$output->writeln('<info>Pulling the latest MaxMind GeoIP database...</info>');
 
-
 		$maxMindDbPath = $this->parameterBag->get('geo_ip.maxmind.path');
 		$maxMindDbKey = $this->parameterBag->get('geo_ip.maxmind.key');
+
+		if (!is_string($maxMindDbPath) || !is_string($maxMindDbKey)) {
+			throw new RuntimeException('GeoIP MaxMind parameters must be defined as strings.');
+		}
 
 		$output->writeln(sprintf('<comment>Using database path: %s</comment>', $maxMindDbPath));
 
@@ -47,20 +55,24 @@ readonly class PullMaxMindDatabaseCommand
 		string $targetDir,
 		string $edition = 'GeoLite2-City',
 	): void {
-
 		$baseUrl = 'https://download.maxmind.com/app/geoip_download';
-
 		$url = sprintf('%s?edition_id=%s&license_key=%s&suffix=tar.gz', $baseUrl, $edition, $licenseKey);
-
 		$archivePath = $targetDir . '/geoip.tar.gz';
 
-		if (!is_dir($targetDir)) {
-			mkdir($targetDir, 0777, true);
+		if (!is_dir($targetDir) && !mkdir($targetDir, 0777, true) && !is_dir($targetDir)) {
+			throw new RuntimeException('Unable to create target directory: ' . $targetDir);
 		}
 
-		// Download .tar.gz
 		$ch = curl_init($url);
+		if (!$ch instanceof CurlHandle) {
+			throw new RuntimeException('Unable to initialize cURL');
+		}
+
 		$fp = fopen($archivePath, 'w+');
+		if ($fp === false) {
+			throw new RuntimeException('Unable to open file for writing: ' . $archivePath);
+		}
+
 		curl_setopt($ch, CURLOPT_FILE, $fp);
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 		curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0');
@@ -68,44 +80,65 @@ readonly class PullMaxMindDatabaseCommand
 		curl_close($ch);
 		fclose($fp);
 
-		// Decompress .tar.gz → .tar
-		$phar = new \PharData($archivePath);
-		$phar->decompress(); // creates geoip.tar
+		try {
+			$phar = new PharData($archivePath);
+			$phar->decompress(); // creates geoip.tar
+		} catch (\Throwable $e) {
+			throw new RuntimeException('Failed to decompress archive: ' . $e->getMessage(), 0, $e);
+		}
+
 		$tarPath = str_replace('.gz', '', $archivePath);
 
-		// Extract .tar
-		$tar = new \PharData($tarPath);
-		$tar->extractTo($targetDir, null, true);
+		try {
+			$tar = new PharData($tarPath);
+			$tar->extractTo($targetDir, null, true);
+		} catch (\Throwable $e) {
+			throw new RuntimeException('Failed to extract archive: ' . $e->getMessage(), 0, $e);
+		}
 
-		// Find .mmdb
+		// Find .mmdb file
 		$mmdbFile = null;
-		$rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($targetDir));
+		$rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($targetDir));
 		foreach ($rii as $file) {
+			if (!$file instanceof SplFileInfo) {
+				continue;
+			}
 			if ($file->isFile() && str_ends_with($file->getFilename(), '.mmdb')) {
-				$mmdbFile = $file->getRealPath();
-				break;
+				$realPath = $file->getRealPath();
+				if ($realPath !== false) {
+					$mmdbFile = $realPath;
+					break;
+				}
 			}
 		}
 
-		if (!$mmdbFile) {
-			throw new \RuntimeException('GeoIP MMDB file not found in archive.');
+		if ($mmdbFile === null) {
+			throw new RuntimeException('GeoIP MMDB file not found in archive.');
 		}
 
-		// Move and rename to GeoIp.mmdb
 		$targetPath = $targetDir . '/GeoIp.mmdb';
-		rename($mmdbFile, $targetPath);
+		if (!rename($mmdbFile, $targetPath)) {
+			throw new RuntimeException('Failed to move .mmdb file to final location.');
+		}
 
 		// Cleanup
-		unlink($archivePath);
-		unlink($tarPath);
+		if (!unlink($archivePath)) {
+			throw new RuntimeException('Failed to remove archive: ' . $archivePath);
+		}
+		if (!unlink($tarPath)) {
+			throw new RuntimeException('Failed to remove tar: ' . $tarPath);
+		}
 
 		foreach (scandir($targetDir) as $item) {
 			if (in_array($item, ['.', '..', 'GeoIp.mmdb'], true)) {
 				continue;
 			}
-
 			$path = $targetDir . '/' . $item;
-			is_dir($path) ? self::recursiveRemoveFolder($path) : unlink($path);
+			if (is_dir($path)) {
+				self::recursiveRemoveFolder($path);
+			} else {
+				unlink($path);
+			}
 		}
 	}
 
@@ -120,5 +153,4 @@ readonly class PullMaxMindDatabaseCommand
 		}
 		rmdir($dir);
 	}
-
 }
