@@ -19,12 +19,11 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 	name: 'geoip:pull-maxmind-database',
 	description: 'Pulls the latest MaxMind GeoIP database.'
 )]
-class PullMaxMindDatabaseCommand extends Command
+readonly class PullMaxMindDatabaseCommand
 {
 	public function __construct(
-		private readonly ParameterBagInterface $parameterBag
+		private ParameterBagInterface $parameterBag
 	) {
-		parent::__construct();
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
@@ -129,7 +128,14 @@ class PullMaxMindDatabaseCommand extends Command
 			throw new RuntimeException('Failed to remove tar: ' . $tarPath);
 		}
 
-		foreach (scandir($targetDir) as $item) {
+		/** @var list<string>|false $dir */
+		$dir = scandir($targetDir);
+
+		if ($dir === false) {
+			throw new \RuntimeException('Failed to read target directory: ' . $targetDir);
+		}
+
+		foreach ($dir as $item) {
 			if (in_array($item, ['.', '..', 'GeoIp.mmdb'], true)) {
 				continue;
 			}
@@ -142,15 +148,20 @@ class PullMaxMindDatabaseCommand extends Command
 		}
 	}
 
-	private static function recursiveRemoveFolder(string $dir): void
+	private static function recursiveRemoveFolder(string $targetDir): void
 	{
-		foreach (scandir($dir) as $item) {
+		/** @var list<string>|false $dir */
+		$dir = scandir($targetDir);
+		if ($dir === false) {
+			throw new \RuntimeException('Failed to read target directory: ' . $targetDir);
+		}
+		foreach ($dir as $item) {
 			if ($item === '.' || $item === '..') {
 				continue;
 			}
-			$path = "$dir/$item";
+			$path = "$targetDir/$item";
 			is_dir($path) ? self::recursiveRemoveFolder($path) : unlink($path);
 		}
-		rmdir($dir);
+		rmdir($targetDir);
 	}
 }
