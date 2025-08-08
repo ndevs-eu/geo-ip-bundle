@@ -19,7 +19,7 @@ class PullMaxMindDatabaseCommand extends Command
     public function __construct(
         private readonly ParameterBagInterface $parameterBag,
     ) {
-	    parent::__construct();
+        parent::__construct();
     }
 
     public function __invoke(OutputInterface $output, InputInterface $input): int
