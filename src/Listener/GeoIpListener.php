@@ -6,6 +6,7 @@ namespace NDevsEu\GeoIp\Listener;
 
 use GeoIp2\Exception\AddressNotFoundException;
 use MaxMind\Db\Reader\InvalidDatabaseException;
+use NDevsEu\GeoIp\Detector\IPDetector;
 use NDevsEu\GeoIp\Service\GeoIpService;
 use NDevsEu\GeoIp\ValueObject\IpAddress;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -22,89 +23,46 @@ readonly class GeoIpListener
 
     public function __invoke(RequestEvent $requestEvent): void
     {
-        $request = $requestEvent->getRequest();
+	    $request = $requestEvent->getRequest();
 
-        /** @var string|null $realIp */
-        $realIp = $this->getRealClientIp($request);
+	    /** @var string|null $realIp */
+	    $realIp = IPDetector::getRealClientIp($request);
 
-        /** @var string|null $ip */
-        $ip = $this->parameterBag->get('geo_ip.mock_ip');
+	    /** @var string|null $ip */
+	    $ip = $this->parameterBag->get('geo_ip.mock_ip');
 
-        if (null === $ip && null !== $realIp) {
-            $ip = $realIp;
-        }
+	    if (NULL === $ip && NULL !== $realIp) {
+		    $ip = $realIp;
+	    }
 
-        if (null === $ip) {
-            $request->attributes->set('geoIp', null);
+	    if (NULL === $ip) {
+		    $request->attributes->set('geoIp', NULL);
 
-            return;
-        }
+		    return;
+	    }
 
-        $ipAddress = new IpAddress($ip);
+	    $ipAddress = new IpAddress($ip);
 
-        try {
-            $geoResponse = $this->geoService->lookup($ipAddress);
+	    try {
+		    $geoResponse = $this->geoService->lookup($ipAddress);
 
-            if (null === $geoResponse) {
-                $request->attributes->set('geoIp', null);
+		    if (NULL === $geoResponse) {
+			    $request->attributes->set('geoIp', NULL);
 
-                return;
-            }
+			    return;
+		    }
 
-            $request->attributes->set('geoIp', [
-                'country' => $geoResponse->getCountry() ?? null,
-                'region' => $geoResponse->getRegion() ?? null,
-                'city' => $geoResponse->getCity() ?? null,
-                'postal' => $geoResponse->getPostal() ?? null,
-                'latitude' => $geoResponse->getLatitude() ?? null,
-                'longitude' => $geoResponse->getLongitude() ?? null,
-            ]);
-        } catch (AddressNotFoundException|InvalidDatabaseException|\Exception $e) {
-            $request->attributes->set('geoIp', null);
-        }
+		    $request->attributes->set('geoIp', [
+			    'country' => $geoResponse->getCountry() ?? NULL,
+			    'region' => $geoResponse->getRegion() ?? NULL,
+			    'city' => $geoResponse->getCity() ?? NULL,
+			    'postal' => $geoResponse->getPostal() ?? NULL,
+			    'latitude' => $geoResponse->getLatitude() ?? NULL,
+			    'longitude' => $geoResponse->getLongitude() ?? NULL,
+		    ]);
+	    } catch (AddressNotFoundException|InvalidDatabaseException|\Exception $e) {
+		    $request->attributes->set('geoIp', NULL);
+	    }
     }
 
-    private function getRealClientIp(Request $request): ?string
-    {
-        // 1. Zkus X-Forwarded-For – může obsahovat víc IP, první by měla být klientská
-        $forwardedFor = $request->headers->get('X-Forwarded-For');
-        if ($forwardedFor) {
-            $ips = explode(',', $forwardedFor);
-            foreach ($ips as $ip) {
-                $ip = trim($ip);
-                if ($this->isPublicIp($ip)) {
-                    return $ip;
-                }
-            }
-        }
-
-        // 2. Zkus další možné hlavičky
-        foreach (['X-Client-IP', 'Forwarded', 'CF-Connecting-IP'] as $header) {
-            $ip = $request->headers->get($header);
-            if ($ip && $this->isPublicIp($ip)) {
-                return $ip;
-            }
-        }
-
-        // 3. Poslední možnost – getClientIp() (respektuje trusted proxies)
-        $ip = $request->getClientIp();
-        if ($ip && $this->isPublicIp($ip)) {
-            return $ip;
-        }
-
-        return null;
-    }
-
-    private function isPublicIp(string $ip): bool
-    {
-        if (!filter_var($ip, \FILTER_VALIDATE_IP)) {
-            return false;
-        }
-
-        return !filter_var(
-            $ip,
-            \FILTER_VALIDATE_IP,
-            \FILTER_FLAG_NO_PRIV_RANGE | \FILTER_FLAG_NO_RES_RANGE
-        );
-    }
 }
