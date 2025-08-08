@@ -1,3 +1,22 @@
+
+<p align="center">
+  <a href="https://github.com/ndevs-eu/geo-ip-bundle/actions">
+    <img src="https://img.shields.io/badge/PHPStan-level%209-brightgreen.svg?style=flat-square" alt="PHPStan Level 9" />
+  </a>
+  <a href="https://github.com/ndevs-eu/geo-ip-bundle/actions/workflows/ci.yml">
+    <img src="https://github.com/ndevs-eu/geo-ip-bundle/actions/workflows/ci.yml/badge.svg" alt="CI" />
+  </a>
+  <a href="https://packagist.org/packages/ndevs-eu/geo-ip-bundle">
+    <img src="https://img.shields.io/packagist/v/ndevs-eu/geo-ip-bundle.svg?style=flat-square" alt="Latest Stable Version" />
+  </a>
+  <a href="https://packagist.org/packages/ndevs-eu/geo-ip-bundle">
+    <img src="https://img.shields.io/packagist/dt/ndevs-eu/geo-ip-bundle.svg?style=flat-square" alt="Total Downloads" />
+  </a>
+  <a href="https://github.com/ndevs-eu/geo-ip-bundle/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/ndevs-eu/geo-ip-bundle?style=flat-square" alt="License" />
+  </a>
+</p>
+
 # 🌍 NDevs GeoIP Bundle
 
 Symfony bundle for detecting user geolocation based on IP address.  
