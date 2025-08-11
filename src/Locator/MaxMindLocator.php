@@ -41,7 +41,8 @@ class MaxMindLocator implements LocatorInterface
         $record = $this->maxMindDbReader->city($address->getAddress());
 
         return new GeoResponse(
-            country: $record->country->isoCode ?? null,
+            countryName: $record->country->name ?? null,
+            countryIsoCode: $record->country->isoCode ?? null,
             region: $record->mostSpecificSubdivision->name ?? null,
             city: $record->city->name ?? null,
             postal: $record->postal->code ?? null,
