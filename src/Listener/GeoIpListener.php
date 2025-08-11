@@ -52,7 +52,8 @@ readonly class GeoIpListener
             }
 
             $request->attributes->set('geoIp', [
-                'country' => $geoResponse->getCountry() ?? null,
+                'country_name' => $geoResponse->getCountryName() ?? null,
+                'country_code' => $geoResponse->getCountryIsoCode() ?? null,
                 'region' => $geoResponse->getRegion() ?? null,
                 'city' => $geoResponse->getCity() ?? null,
                 'postal' => $geoResponse->getPostal() ?? null,
