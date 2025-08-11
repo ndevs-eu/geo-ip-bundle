@@ -7,7 +7,7 @@ namespace NDevsEu\GeoIp\ValueObject;
 readonly class GeoResponse
 {
     public function __construct(
-		private ?string $countryName,
+        private ?string $countryName,
         private ?string $countryIsoCode,
         private ?string $region,
         private ?string $city,
@@ -17,15 +17,15 @@ readonly class GeoResponse
     ) {
     }
 
-	public function getCountryName(): ?string
-	{
-		return $this->countryName;
-	}
+    public function getCountryName(): ?string
+    {
+        return $this->countryName;
+    }
 
-	public function getCountryIsoCode(): ?string
-	{
-		return $this->countryIsoCode;
-	}
+    public function getCountryIsoCode(): ?string
+    {
+        return $this->countryIsoCode;
+    }
 
     public function getRegion(): ?string
     {
