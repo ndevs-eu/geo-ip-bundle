@@ -41,7 +41,8 @@ readonly class Ip2LocationLocator implements LocatorInterface
             }
 
             return new GeoResponse(
-                country: $record['countryCode'] ?? null,
+                countryName: $record['countryName'] ?? null,
+                countryIsoCode: $record['countryCode'] ?? null,
                 region: null,
                 city: null,
                 postal: null,
